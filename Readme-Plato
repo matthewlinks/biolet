@@ -1,0 +1,11 @@
+# load the appropriate modules for Matlab and for compilation
+module load matlab/R2013a matlab/mcr
+# make sure things are sane
+make clean
+# build the source
+make
+# test the code
+make test
+# check out whether it returnes a GFF from the sequence
+less data/F2I9.nuc_out_db2.gff
+
