@@ -3,7 +3,7 @@
 #MATLABDIR = /usr/local/matlab704
 #MATLABDIR = /usr/local/matlab6p5
 # on Plato
-MATLABDIR = /cm/shared/apps/matlab/R2013a/bin/mcc
+MATLABDIR = /cm/shared/apps/matlab/R2013a
 
 INCLUDES	= -I $(MATLABDIR)/toolbox/wavelet/wavelet/ -I $(MATLABDIR)/toolbox/matlab/general/
 MCC		= $(MATLABDIR)/bin/mcc
