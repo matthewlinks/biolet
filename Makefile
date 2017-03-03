@@ -1,7 +1,9 @@
 ### Full includes ###
 # make sure this points to your matlab installation
 #MATLABDIR = /usr/local/matlab704
-MATLABDIR = /usr/local/matlab6p5
+#MATLABDIR = /usr/local/matlab6p5
+# on Plato
+MATLABDIR = /cm/shared/apps/matlab/R2013a/bin/mcc
 
 INCLUDES	= -I $(MATLABDIR)/toolbox/wavelet/wavelet/ -I $(MATLABDIR)/toolbox/matlab/general/
 MCC		= $(MATLABDIR)/bin/mcc

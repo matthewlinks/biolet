@@ -17,6 +17,8 @@ Format: xvii, 180 leaves : ill. ; 28 cm..
 During my thesis I was supervised by Dr. William Crosby 
 http://bioinfo.uwindsor.ca/contact.html
 
+This code was originally hosted on sourceforge. As of 3March2017 the GitHub repo is active.  
+
 Cheeers,
 
 Matt
