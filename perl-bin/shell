@@ -1,0 +1,457 @@
+#!/usr/local/bin/perl -w
+#use strict;
+use Tk;
+use Bio::SeqIO;
+use Bio::Tk::SeqCanvas;
+use Bio::Tools::GFF;
+use File::Basename;
+
+my $prompt = 'Comp_Wavelet_Browser> ';
+my $wavelet_dir = 'wavelet_gffs';	# this is where the wavelet recalculated gffs should be
+my $num_wavelets = 11;
+my $nuc_ext = 'nuc';
+my $gff_ext = 'gff';
+my $gb_ext = 'gbk.gz';
+my $bar = '==============================================================================';
+
+my @genome_dirs = qw(
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/Apis_mellifera
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/Arabidopsis_thaliana
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/Bos_taurus
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/Caenorhabditis_elegans
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/Canis_familiaris
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/D_rerio
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/Drosophila_melanogaster
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/Gallus_gallus
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/H_sapiens
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/M_musculus
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/Pan_troglodytes
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/R_norvegicus
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Candida_glabrata_CBS138
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Cryptococcus_neoformans_var_JEC21
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Debaryomyces_hansenii_CBS767
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Encephalitozoon_cuniculi
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Eremothecium_gossypii
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Kluyveromyces_lactis_NRRL_Y-1140
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Saccharomyces_cerevisiae
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Schizosaccharomyces_pombe
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Yarrowia_lipolytica_CLIB99
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Aspergillus_nidulans_FGSC_A4
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Gibberella_zeae_PH-1
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Magnaporthe_grisea_70-15
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Neurospora_crassa
+	/bio_data/ftp.ncbi.nih.gov-genomes/21July05/FUNGI/Yarrowia_lipolytica
+);
+my $genome2dir = solve_genome_names(\@genome_dirs);
+my @genomes = sort {$a cmp $b} keys %{$genome2dir};
+
+select_genome(\@genomes);
+print "Finsihed\n";
+exit;
+
+
+#######################################
+# Shell Menus
+#######################################
+
+sub select_genome{
+	my $genomes = shift;
+	die "Error lost genomes" unless defined $genomes;
+	while(){
+		print "$bar\n";
+		print "Select a genome to look at\n";
+		print "$bar\n";
+		for (my $i = 0; $i < @{$genomes};++$i){
+			print "\t[$i]\t",$genomes->[$i],"\n";
+		}
+		print $prompt;
+		my $line = _readline();
+		if ($line =~ /^(\d+)/){
+			my $index = $1;
+			if (($index >= 0) and ($index < @{$genomes})){
+				print "you selected ",$genomes[$index],"\n";
+				genome_menu($index);
+			}
+		}elsif($line =~ /^back/i){
+			return;
+		}
+	}
+}
+
+sub genome_menu{
+	my $g_index = shift;
+	my $genome = $genomes[$g_index];
+
+	# CANNOT do this with use strict
+	my %commands = (
+		0	=> ['get_progress_report','Simple progress report'],	
+		1	=> ['select_psuedochromosome','Select peudochromosome for viewing'],
+	);
+
+	while(){
+		print "$bar\n";
+		print "Select a task for $genome\n";
+		print "$bar\n";
+		foreach my $k (sort {$a <=> $b} keys %commands){
+			my $cmd = $commands{$k};
+			my ($sub,$title) = @{$cmd};
+			print "\t[$k]\t$title\n";
+		}
+		print $prompt;
+		my $line = _readline();
+
+		if($line =~ /^back/i){
+			return;
+		}else{
+			my $cmd = $commands{$line};
+			my ($sub,$title) = @{$cmd};
+			if ($sub){
+				&$sub($g_index);
+			}else{
+				warn "Error cannot call command ($line). Please try again.";
+			}
+		}
+	}
+}
+
+sub select_psuedochromosome{
+	my $g = shift;
+	my $genome = $genomes[$g];
+	# figure out the directories
+	my $dir = get_dir($genome);
+	my $frag_dir = get_frag_dir($genome);
+
+
+	while(1){
+		my @total_file_keys;
+		my $index = 0;
+		# handle the top level files
+		my $top_level_gbfiles = get_gbfiles($dir);
+		my %TopAcc2file;
+		print "$bar\n";
+		print "$genome: Select a Top level psuedochromosome file for viewing\n";
+		print "$bar\n";
+		if (@{$top_level_gbfiles} > 0){
+			foreach my $file (@{$top_level_gbfiles}){
+				my ($acc,$path,$suffix) = fileparse($file,".$gb_ext");
+				print "\t[$index]\t$acc\n";
+				$TopAcc2file{$acc} = $file;
+					push(@total_file_keys,$file);
+				++$index;
+			}
+		}
+	
+		# handle files that are within top_level/CHR_* folders
+		my $chr_files = get_chr_files($dir);
+		print "$bar\n";
+		print "$genome: Or select a pseudochromosome file from a given chromosome\n";
+		print "$bar\n";
+		foreach my $chr (sort {$a cmp $b} keys %{$chr_files}){
+				print "\t$chr\n";
+			foreach my $acc (sort {$a cmp $b} keys %{$chr_files->{$chr}}){
+				my $file = $chr_files->{$chr}->{$acc};
+				print "\t\t[$index]\t$acc\t",get_entrez_link($acc),"\n";
+				push(@total_file_keys,$file);
+				++$index;
+			}
+		}	
+		print $prompt;
+		my $i = _readline();
+		last if ($i =~ /^quit/i);
+		my $file = $total_file_keys[$i];
+		if ($file){
+			view_acc($file,$dir);
+		}elsif($i =~ /^back/i){
+			return;
+		}else{
+			print "You entered an incorrect index ($i). Please try again.\n";
+		}
+	}
+}
+
+sub view_acc {
+	my $gb_file = shift;
+	my $dir = shift;
+
+	# read the seqio object into memory
+	my ($acc,$path,$suffix) = fileparse($gb_file,".$gb_file");
+	my $sio = Bio::SeqIO->new(	-file => "gunzip -c $gb_file |",
+					-format => 'genbank') or die "Error opening $gb_file for reading: $!";
+	my $SeqObj = $sio->next_seq();
+	my $display_id = $SeqObj->display_id();
+
+	# setup additional gff files
+	my @additional_gff_files;
+	#	wavlet
+	my $wave_gff = get_wave_gff($display_id,$dir);
+	push(@additional_gff_files,$wave_gff) if defined $wave_gff;
+	# for each GFF file specified add these features to SeqObj
+	# If you try and add them later the features do no display properly due to a bug in how features types get defined
+	# at present it appears that the feature types are ONLY assigned when the Bio::SeqI object is first handled by SeqCanvas
+	# I should probably hit Mark up about this issue at some point
+	if (@additional_gff_files > 0){
+		for(my $i = 0; $i < @additional_gff_files;++$i){
+			$SeqObj = add_gff_feats($additional_gff_files[$i],$SeqObj,1);
+		}
+	}
+	my $MW = MainWindow->new (-title => "Map Of $display_id");
+	my $frame = $MW->Frame()->pack(-side => 'top', -fill => 'both');
+	my $lbl = $MW->Label()->pack(-side => 'bottom', -fill => 'both');
+	my $a_len = 1600;
+	my $map = Bio::Tk::SeqCanvas->new(
+		$a_len,
+		$frame,
+		$lbl,
+		$SeqObj,
+		-orientation => 'horizontal',
+#		-orientation => 'vertical',
+		label => 'primary_tag',
+		width => 6000,
+		height => 1000
+	);
+	MainLoop;
+}
+
+sub get_progress_report{
+	my $g = shift;
+	my $genome = $genomes[$g];
+
+	# figure out the directories
+	my $dir = get_dir($genome);
+	my $frag_dir = get_frag_dir($genome);
+
+	# get some counts 
+	my $num_frags = num_frags($frag_dir);
+	if($num_frags > 0){
+		warn "Counting nucleotides found in $num_frags fragment files please be patient";
+		my $num_nucleotides = count_nucleotides(get_frags_from($frag_dir));
+		my $num_wave_gffs = num_wave_gffs($frag_dir);
+	
+		# figure out how far along we are
+			my $num_wave_gffs_exp = $num_wavelets * $num_frags;
+		my $perc_comp = sprintf("%0.2f",(($num_wave_gffs/$num_wave_gffs_exp)*100));
+
+		print <<EOF;
+$bar
+	Progress Report for $genome
+$bar
+
+	Number of nucleotides				$num_nucleotides
+	Number of fragments				$num_frags
+	Number of Wavelet gffs expected			$num_wave_gffs_exp
+	Number of Wavelet gffs in hand			$num_wave_gffs
+	% of wavelet analysis complete complete		$perc_comp
+
+EOF
+	}else{
+		print <<EOF;
+$bar
+	Progress Report for $genome
+$bar
+	There were no fragments found for the genome. 
+	This implies that there was a problem with the data transfer from the NCBI.
+	Look at the contents of $dir
+EOF
+	}
+
+}
+
+#######################################
+# Subroutines
+#######################################
+
+sub _readline{
+	my $line = <>;
+	if (!(defined $line)){
+		print "close\n";
+		exit;
+	}
+	chomp $line;
+	return $line unless ($line =~ /^quit/i);
+	print "Exiting at user's request\n";
+	exit;
+}
+
+sub count_nucleotides{
+        my $frags = shift;
+        my $count = 0;
+        foreach my $f (@{$frags}){
+#               warn "Looking at $f\n";
+                my $fastaio = Bio::SeqIO->new(  -file =>"<$f",
+# in case there are extremely large fragments (shouldn't happen) use the largefasta libraries
+#                                               -format => 'largefasta') or die "Error opening $f for reading: $!";
+                                                -format => 'fasta') or die "Error opening $f for reading: $!";
+                while(my $seq = $fastaio->next_seq()){
+                        $count += $seq->length();
+                        undef $seq;
+                }
+        }
+        return $count;
+}
+
+sub get_frags_from{
+        my $frag_dir = shift;
+	return _get_files_by_ext($frag_dir,$nuc_ext);
+}
+
+sub get_entrez_link{
+	my $term = shift;
+	my $url = 'http://www.ncbi.nlm.nih.gov/gquery/gquery.fcgi?term=' . $term;
+	return $url;
+}
+
+sub get_chr_files{
+	my $dir = shift;
+	my %chrs;
+	# look for CHR_ directories
+	opendir(DIR,$dir) or die "Error opening $dir: $!";
+	while(defined (my $file = readdir(DIR))){
+		next if ($file =~ /^\./);
+		if (($file =~ /^(CHR\_.*)$/) and (-d "$dir/$file")){
+			# find all of the psuedochromosome files 
+			# the relation of CHR_ to # files is 1 to many
+			# e.g. drosophila has a 2R and a 2L likewise all wierd ploidy is likely handled this way
+			my $chr = $1;
+			# need to poach all of the genbank files within the chr directory
+			opendir(CHRDIR,"$dir/$file") or die "Error opening $dir/$file: $!";
+			while(defined(my $chr_file = readdir(CHRDIR))){
+				next unless ($chr_file =~ /\.$gb_ext$/);
+				my ($acc,$path,$suffix) = fileparse($chr_file,".$gb_ext");
+				$chrs{$chr}->{$acc} = "$dir/$file/$chr_file";
+			}
+			closedir(CHRDIR) or die "Error closing $dir/$file: $!";
+		}
+	}
+	closedir(DIR) or die "Error closing $dir: $!";
+	return \%chrs;
+}
+
+sub _get_files_by_ext{
+        my $dir = shift;
+	my $ext = shift;
+        my @files;
+        if (-d $dir){
+                opendir(DIR,$dir) or die "$dir is a directory but I cannot open it: $!";
+                while(defined (my $file = readdir(DIR)) ){
+                        next unless ($file =~ /\.$ext$/);
+                        push (@files,"$dir/$file");
+                }
+                closedir(DIR) or die "Error closing $dir: $!";
+        }else{
+                warn "No fragment directory for $dir";
+        }
+        return \@files;
+}
+
+sub get_gbfiles{
+        my $frag_dir = shift;
+	return _get_files_by_ext($frag_dir,$gb_ext);
+}
+
+sub _count_files_by_ext{
+	my $dir = shift;
+	my $ext = shift;
+	my $num = 0;
+	opendir(DIR, $dir) or die "can't opendir $dir: $!";
+	while (defined(my $file = readdir(DIR))) {
+		next if ($file =~ /^\./);
+		if ($file =~ /\.$ext$/){
+			++$num;
+		}
+	}
+	closedir(DIR);
+	return $num;
+}
+
+sub num_wave_gffs{
+	return num_gffs(@_);
+}
+
+sub num_gffs {
+	my $fragdir = shift;
+	return _count_files_by_ext($fragdir,$gff_ext);
+}
+
+sub num_frags {
+	my $fragdir = shift;
+	return _count_files_by_ext($fragdir,$nuc_ext);
+}
+
+sub get_frag_dir{
+	my $g = shift;
+	return get_dir($g) . '/fragments';
+}
+
+sub get_dir {
+	my $g = shift;
+	return $genome2dir->{$g};
+}
+
+sub select_genome_tk{
+	my $mw = MainWindow->new();
+	$mw->configure(-title => 'Wavelet - comparative genomics browser');
+	$mw->geometry('+400+600');
+	my $TopFrame = $mw->Frame(-relief => 'groove', -borderwidth => 3)->pack(-side => 'top', -fill=> 'x');
+	my $Label = $TopFrame->Label(-text => 'Select a genome for details')->pack(-side => 'left');
+	my $List = $TopFrame->Listbox(-selectmode => 'single')->pack(-side => 'right');
+	$List->insert('end',@genomes);
+	
+	MainLoop;
+}
+
+sub solve_genome_names{
+	my $dirs = shift;
+	my %genome2dir;
+	foreach my $d (@{$dirs}){
+		my ($genome,$path,$suffix) = fileparse($d);
+		$genome2dir{$genome} = $d;
+	}
+	return \%genome2dir;
+}
+
+sub get_wave_gff{
+	my $acc = shift;
+	my $d = shift;
+
+	my $dir = $d . '/' . $wavelet_dir;
+
+	my $f;
+	opendir(DIR,$dir) or die "Error opening $dir: $!";
+	while(defined(my $file = readdir(DIR))){
+		next unless $file eq "$acc.$gff_ext";
+		$f = "$dir/$file";
+		last;
+	}
+	closedir(DIR) or die "Error closing $dir: $!";
+
+	return $f;
+}
+
+sub ensure_wavelet_dir{
+        my $d = shift;
+        my $dir = $d . '/' . $wavelet_dir;
+        if (!(-d $dir)){
+                mkdir($dir) or die "Error creating $dir: $!";
+        }
+        return $dir;
+}
+sub add_gff_feats{
+	my $file = shift;
+	die "Error no gff file specified" unless defined $file;
+	my $SeqObj = shift;
+	die "Error SeqObj not defined" unless defined $SeqObj;
+	my $swap = shift;
+
+	my $gffio = Bio::Tools::GFF->new(      -file => "<$file",
+        	                                        -gff_version => 2) or die "Error opening GFFstream for $file: $!";
+	while(defined (my $feat = $gffio->next_feature)){
+		if ($swap) {
+			my ($source,$primary) = ($feat->source_tag,$feat->primary_tag);
+			# swap primary and source tags so that all of the different wavelets and levels come up as different tracks
+			$feat->primary_tag($source);
+			$feat->source_tag($primary);
+		}
+		$SeqObj->add_SeqFeature($feat);
+	}
+	return $SeqObj;
+}

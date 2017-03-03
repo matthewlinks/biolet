@@ -1,0 +1,41 @@
+#!/usr/bin/perl -w
+use strict;
+my $fragments = '/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/fragments/';
+my @chromosomes = qw (
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr10.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr11.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr12.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr13.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr14.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr15.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr16.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr17.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr18.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr19.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr1.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr20.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr21.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr22.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr2.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr3.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr4.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr5.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr6.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr7.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr8.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chr9.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chrX.fa
+	/bio_data/ftp.ncbi.nih.gov-genomes/H_sapiens/Assembled_chromosomes/hs_chrY.fa
+);
+my $fragment_size	= 500000;
+my $chop		= '/home/mlinks/CVSROOT/bio-wavelet/perl-bin/chop_chromosome.pl';
+my $wavelet 		= '/home/mlinks/CVSROOT/bio-wavelet/perl-bin/wavelet_dir';
+
+foreach my $chr (sort @chromosomes){
+	print "Chopping Chromosome $chr\n";
+	system($chop,$chr,$fragment_size,$fragments);
+}
+
+print "Wavelet analysis of $fragments\n";
+
+system($wavelet,$fragments)

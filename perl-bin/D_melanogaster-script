@@ -1,0 +1,25 @@
+#!/bin/sh
+
+echo Chopping Chromosome 2L/R
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/chop_chromosome.pl /home/mlinks/Drosophila_melanogaster/CHR_2/NT_033779.fna 500000 /home/mlinks/Drosophila_melanogaster/CHR_2/fragments
+echo Chopping Chromosome 2L/R
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/chop_chromosome.pl /home/mlinks/Drosophila_melanogaster/CHR_2/NT_033778.fna 500000 /home/mlinks/Drosophila_melanogaster/CHR_2/fragments
+echo Chopping Chromosome 3
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/chop_chromosome.pl /home/mlinks/Drosophila_melanogaster/CHR_3/NT_033777.fna 500000 /home/mlinks/Drosophila_melanogaster/CHR_3/fragments
+echo Chopping Chromosome 3
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/chop_chromosome.pl /home/mlinks/Drosophila_melanogaster/CHR_3/NT_037436.fna 500000 /home/mlinks/Drosophila_melanogaster/CHR_3/fragments
+echo Chopping Chromosome 4
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/chop_chromosome.pl /home/mlinks/Drosophila_melanogaster/CHR_4/NC_004353.fna 500000 /home/mlinks/Drosophila_melanogaster/CHR_4/fragments
+echo Chopping Chromosome X
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/chop_chromosome.pl /home/mlinks/Drosophila_melanogaster/CHR_X/NC_004354.fna 500000 /home/mlinks/Drosophila_melanogaster/CHR_X/fragments
+
+echo Wavelet analysis 1
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/wavelet_dir /home/mlinks/Drosophila_melanogaster/CHR_2/fragments
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/wavelet_dir /home/mlinks/Drosophila_melanogaster/CHR_3/fragments
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/wavelet_dir /home/mlinks/Drosophila_melanogaster/CHR_4/fragments
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/wavelet_dir /home/mlinks/Drosophila_melanogaster/CHR_X/fragments
+#real    1246m0.210s
+#user    1100m49.801s
+#sys     143m31.009s
+
+

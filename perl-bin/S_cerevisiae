@@ -1,0 +1,39 @@
+#!/usr/bin/perl -w
+use strict;
+my $fragments = '/home/mlinks/Saccharomyces_cerevisiae/fragments';
+my @chromosomes = qw (
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_III/NC_001135.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_II/NC_001134.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_I/NC_001133.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_IV/NC_001136.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_IX/NC_001141.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_MT/NC_001224.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_VIII/NC_001140.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_VII/NC_001139.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_VI/NC_001138.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_V/NC_001137.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_XIII/NC_001145.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_XII/NC_001144.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_XI/NC_001143.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_XIV/NC_001146.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_X/NC_001142.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_XVI/NC_001148.fna
+	/home/mlinks/Saccharomyces_cerevisiae/CHR_XV/NC_001147.fna
+);
+my $fragment_size	= 500000;
+my $chop		= '/home/mlinks/CVSROOT/wavelet-new/perl-bin/chop_chromosome.pl';
+my $wavelet 		= '/home/mlinks/CVSROOT/wavelet-new/perl-bin/wavelet_dir';
+
+foreach my $chr (sort @chromosomes){
+	print "Chopping Chromosome $chr\n";
+	system($chop,$chr,$fragment_size,$fragments);
+}
+
+print "Wavelet analysis of $fragments\n";
+
+system($wavelet,$fragments)
+#time
+#real    130m8.322s
+#user    114m30.614s
+#sys     15m11.067s
+

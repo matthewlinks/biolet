@@ -1,0 +1,29 @@
+#!/usr/bin/perl -w
+use strict;
+die "Usage: $0 directory_to_process" unless (@ARGV >= 1);
+
+my $dir = $ARGV[0];
+my $level_analysis = 12;
+my $wavelet_type = 'db';
+my $wavelet_start = 2;
+my $wavelet_max = 10;
+my $strand = 1;
+my $cmd = 'wavelet';	# change if you need to specify the abs path 
+
+opendir(DIR, $dir) or die "can't opendir $dir: $!";
+while (defined(my $file = readdir(DIR))) {
+	if (($file !~ /^\./)and($file !~ /\.gff?/)){
+		process_file("$dir/$file");
+	}
+}
+closedir(DIR);
+
+sub process_file{
+	my $file = shift;
+	print "Calling wavelet on $file\n";
+	for (my $i = $wavelet_start; $i <= $wavelet_max; ++$i){
+		my $wlt = $wavelet_type . $i;
+		system($cmd,$file,$wlt,$level_analysis,$strand);
+	}
+}
+

@@ -1,0 +1,23 @@
+#!/bin/sh
+
+echo Chopping Chromosome 1
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/chop_chromosome.pl /home/mlinks/A_thaliana/A_thaliana/CHR_I/NC_003070.fna 500000 /home/mlinks/A_thaliana/A_thaliana/CHR_I/fragments/
+echo Chopping Chromosome 2
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/chop_chromosome.pl /home/mlinks/A_thaliana/A_thaliana/CHR_II/NC_003071.fna 500000 /home/mlinks/A_thaliana/A_thaliana/CHR_II/fragments/
+echo Chopping Chromosome 3
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/chop_chromosome.pl /home/mlinks/A_thaliana/A_thaliana/CHR_III/NC_003074.fna 500000 /home/mlinks/A_thaliana/A_thaliana/CHR_III/fragments/
+echo Chopping Chromosome 4
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/chop_chromosome.pl /home/mlinks/A_thaliana/A_thaliana/CHR_IV/NC_003075.fna 500000 /home/mlinks/A_thaliana/A_thaliana/CHR_IV/fragments/
+echo Chopping Chromosome 5
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/chop_chromosome.pl /home/mlinks/A_thaliana/A_thaliana/CHR_V/NC_003076.fna 500000 /home/mlinks/A_thaliana/A_thaliana/CHR_V/fragments/
+
+echo Wavelet analysis 1
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/wavelet_dir /home/mlinks/A_thaliana/A_thaliana/CHR_I/fragments/
+echo Wavelet analysis 2
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/wavelet_dir /home/mlinks/A_thaliana/A_thaliana/CHR_II/fragments/
+echo Wavelet analysis 3
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/wavelet_dir /home/mlinks/A_thaliana/A_thaliana/CHR_III/fragments/
+echo Wavelet analysis 4
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/wavelet_dir /home/mlinks/A_thaliana/A_thaliana/CHR_IV/fragments/
+echo Wavelet analysis 5
+/home/mlinks/CVSROOT/wavelet-new/perl-bin/wavelet_dir /home/mlinks/A_thaliana/A_thaliana/CHR_V/fragments/
